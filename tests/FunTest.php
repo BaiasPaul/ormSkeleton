@@ -39,9 +39,9 @@ class FunTest extends TestCase
         $dsn = "mysql:host={$config['host']};dbname={$config['db']};charset={$config['charset']}";
 
         $options = [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES   => false,
+            PDO::ATTR_EMULATE_PREPARES => false,
         ];
 
         $this->pdo = new PDO($dsn, $config['user'], $config['pass'], $options);
@@ -49,7 +49,6 @@ class FunTest extends TestCase
         $this->userRepo = new UserRepository($this->pdo, User::class, $this->hydrator);
         $this->repoManager = new RepositoryManager([$this->userRepo]);
     }
-
 
     public function testCreateUser(): void
     {
@@ -82,4 +81,31 @@ class FunTest extends TestCase
 
         $this->assertEquals(1, $user->getId());
     }
+
+    public function testHydrate(): void
+    {
+        $this->hydrator = new Hydrator();
+        $user = new User('jhon', 'jhon@email.com');
+        $data = [
+            'id' => null,
+            'name' => 'jhon',
+            'email' => 'jhon@email.com'
+        ];
+        $result = $this->hydrator->hydrate(User::class, $data);
+        $this->assertEquals($user, $result);
+    }
+
+    public function testExtract(): void
+    {
+        $this->hydrator = new Hydrator();
+        $user = new User('jhon', 'jhon@email.com');
+        $data = [
+            'id' => null,
+            'name' => 'jhon',
+            'email' => 'jhon@email.com'
+        ];
+        $result = $this->hydrator->extract($user);
+        $this->assertEquals($data,$result);
+    }
+
 }
