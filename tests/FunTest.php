@@ -30,6 +30,7 @@ class FunTest extends TestCase
      */
     private $repoManager;
 
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -85,14 +86,14 @@ class FunTest extends TestCase
     public function testHydrate(): void
     {
         $this->hydrator = new Hydrator();
-        $user = new User('jhon', 'jhon@email.com');
+        $entitie = new User('jhon', 'jhon@email.com');
         $data = [
             'id' => null,
             'name' => 'jhon',
             'email' => 'jhon@email.com'
         ];
         $result = $this->hydrator->hydrate(User::class, $data);
-        $this->assertEquals($user, $result);
+        $this->assertEquals($entitie, $result);
     }
 
     public function testExtract(): void
@@ -105,7 +106,84 @@ class FunTest extends TestCase
             'email' => 'jhon@email.com'
         ];
         $result = $this->hydrator->extract($user);
-        $this->assertEquals($data,$result);
+        $this->assertEquals($data, $result);
+    }
+
+    /**
+     * @test
+     * @dataProvider findOneByProvider
+     */
+    public function testFindOneBy($filter): void
+    {
+        /** @var User $user */
+        $user = $this->userRepo->findOneBy($filter);
+        $this->assertEquals(1, $user->getId());
+    }
+
+    public function findOneByProvider()
+    {
+        return [
+            [
+                [
+                    'name' => 'paul'
+                ]
+            ],
+            [
+                [
+                    'name' => 'paul',
+                    'email' => 'paul@email.com'
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * @test
+     * @dataProvider findByProvider
+     */
+    public function testFindBy($filter, $sorts): void
+    {
+        /** @var User $user */
+        $user = $this->userRepo->findBy($filter, $sorts, 0, 1);
+        $this->assertEquals(1, $user[0]->getId());
+    }
+
+    public function findByProvider()
+    {
+        return [
+            [
+                [
+                    'name' => 'paul'
+                ],
+                [
+                    'name' => 'DESC'
+                ]
+            ],
+            [
+                [
+                    'name' => 'paul',
+                    'email' => 'paul@email.com'
+                ],
+                [
+                    'name' => 'DESC',
+                    'email' => 'ASC'
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * @test
+     * @dataProvider findByProvider
+     */
+    public function testInsertOnDuplicateKeyUpdate(): void
+    {
+        /** @var User $user */
+
+        $user = new User('jhon', 'jhon@email.com');
+        $result = $this->userRepo->insertOnDuplicateKeyUpdate($user);
+
+        $this->assertEquals(1, $result);
     }
 
 }
