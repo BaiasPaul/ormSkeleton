@@ -46,46 +46,42 @@ class FunTest extends TestCase
         ];
 
         $this->pdo = new PDO($dsn, $config['user'], $config['pass'], $options);
-        $this->hydrator = new Hydrator();
+        $this->repoManager = new RepositoryManager();
+        $this->hydrator = new Hydrator($this->repoManager);
         $this->userRepo = new UserRepository($this->pdo, User::class, $this->hydrator);
-        $this->repoManager = new RepositoryManager([$this->userRepo]);
+        $this->repoManager->addRepository($this->userRepo);
     }
 
-    public function testCreateUser(): void
-    {
-        $user = new User();
-        $user->setName('ciwawa');
-        $user->setEmail('email');
-        $this->repoManager->register($user);
-        $result = $user->save();
+//    public function testCreateUser(): void
+//    {
+//        $user = new User();
+//        $user->setName('ciwawa');
+//        $user->setEmail('email');
+//        $this->repoManager->register($user);
+//        $result = $user->save();
+//
+//        $this->assertEquals(true, $result);
+//    }
 
-        $this->assertEquals(true, $result);
-    }
-
-    public function testUpdateUser(): void
-    {
-        $user = $this->userRepo->find(1);
-        $user->setEmail('other email');
-
-        //echo $user->getId();
-        //echo $user->getEmail();
-
-        $result = $user->save();
-
-        $this->assertEquals(true, $result);
-    }
+//    public function testUpdateUser(): void
+//    {
+//        $user = $this->userRepo->find(1);
+//        $user->setEmail('paul@email.com');
+//        $this->repoManager->register($user);
+//        $result = $user->save();
+//
+//        $this->assertEquals(true, $result);
+//    }
 
     public function testFind(): void
     {
         /** @var User $user */
         $user = $this->userRepo->find(1);
-
         $this->assertEquals(1, $user->getId());
     }
 
     public function testHydrate(): void
     {
-        $this->hydrator = new Hydrator();
         $entitie = new User('jhon', 'jhon@email.com');
         $data = [
             'id' => null,
@@ -98,7 +94,6 @@ class FunTest extends TestCase
 
     public function testExtract(): void
     {
-        $this->hydrator = new Hydrator();
         $user = new User('jhon', 'jhon@email.com');
         $data = [
             'id' => null,
@@ -174,14 +169,22 @@ class FunTest extends TestCase
 
     /**
      * @test
-     * @dataProvider findByProvider
      */
     public function testInsertOnDuplicateKeyUpdate(): void
     {
         /** @var User $user */
 
-        $user = new User('jhon', 'jhon@email.com');
+        $user = $this->userRepo->find(2);
+        $user->setName("paul");
         $result = $this->userRepo->insertOnDuplicateKeyUpdate($user);
+
+        $this->assertEquals(1, $result);
+    }
+
+    public function testDelete()
+    {
+        $user = $this->userRepo->find(9);
+        $result = $this->userRepo->delete($user);
 
         $this->assertEquals(1, $result);
     }

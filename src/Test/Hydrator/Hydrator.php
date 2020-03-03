@@ -5,14 +5,17 @@ namespace ReallyOrm\Test\Hydrator;
 
 use ReallyOrm\Entity\EntityInterface;
 use ReallyOrm\Hydrator\HydratorInterface;
+use ReallyOrm\Test\Repository\RepositoryManager;
 use ReflectionClass;
 use ReflectionException;
 
 class Hydrator implements HydratorInterface
 {
+    private $repoManager;
 
-    public function getAttributes(){
-
+    public function __construct(RepositoryManager $repositoryManager)
+    {
+        $this->repoManager=$repositoryManager;
     }
 
     /**
@@ -21,9 +24,9 @@ class Hydrator implements HydratorInterface
      */
     public function hydrate(string $className, array $data): EntityInterface
     {
-        $reflixionClass = new ReflectionClass($className);
+        $reflectionClass = new ReflectionClass($className);
         $entityClass = new $className;
-        foreach ($reflixionClass->getProperties() as $property) {
+        foreach ($reflectionClass->getProperties() as $property) {
             if(!preg_match('/@ORM (\w+) ?/', $property->getDocComment(), $propertyName)){
                 continue;
             }
@@ -40,9 +43,9 @@ class Hydrator implements HydratorInterface
      */
     public function extract(EntityInterface $entity): array
     {
-        $reflixionClass = new ReflectionClass(get_class($entity));
+        $reflectionClass = new ReflectionClass(get_class($entity));
         $array = array();
-        foreach ($reflixionClass->getProperties() as $property) {
+        foreach ($reflectionClass->getProperties() as $property) {
             if(!preg_match('/@ORM (\w+) ?/', $property->getDocComment(), $propertyName)){
                 continue;
             }
@@ -56,9 +59,16 @@ class Hydrator implements HydratorInterface
 
     /**
      * @inheritDoc
+     * @throws ReflectionException
      */
     public function hydrateId(EntityInterface $entity, int $id): void
     {
-        // TODO: Implement hydrateId() method.
+        $reflectionClass = new ReflectionClass($entity);
+        foreach ($reflectionClass->getProperties() as $property) {
+            if (preg_match('/@ID/', $property->getDocComment()) === 1) {
+                $property->setAccessible(true);
+                $property->setValue($id);
+            }
+        }
     }
 }

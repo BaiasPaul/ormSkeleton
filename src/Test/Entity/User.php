@@ -12,6 +12,7 @@ class User extends AbstractEntity
 
     /**
      * @var int
+     * @ID
      * @ORM id
      */
     private $id;
