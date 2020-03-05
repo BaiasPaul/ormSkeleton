@@ -66,7 +66,8 @@ abstract class AbstractRepository implements RepositoryInterface
         return $this->entityName;
     }
 
-    public function getTableName(){
+    public function getTableName()
+    {
         $clasName = explode("\\", $this->entityName);
         return strtolower($clasName[sizeof($clasName) - 1]);
     }
@@ -155,7 +156,7 @@ abstract class AbstractRepository implements RepositoryInterface
         return $result;
     }
 
-    private function getColumns(EntityInterface $entity,array $data)
+    private function getColumns(EntityInterface $entity, array $data)
     {
         $columns = '';
         $data = $this->hydrator->extract($entity);
@@ -166,7 +167,7 @@ abstract class AbstractRepository implements RepositoryInterface
         return substr($columns, '0', '-2');
     }
 
-    private function getValues(EntityInterface $entity,array $data)
+    private function getValues(EntityInterface $entity, array $data)
     {
         $columns = '';
         $data = $this->hydrator->extract($entity);
@@ -177,11 +178,11 @@ abstract class AbstractRepository implements RepositoryInterface
         return substr($columns, '0', '-2');
     }
 
-    private function getUpdatedValues(EntityInterface $entity,array $data)
+    private function getUpdatedValues(EntityInterface $entity, array $data)
     {
         $columns = '';
         foreach ($data as $fieldName => $value) {
-            if($fieldName === 'id'){
+            if ($fieldName === 'id') {
                 continue;
             }
             $columns .= $fieldName . ' = VALUES(' . $fieldName . '), ';
@@ -196,11 +197,17 @@ abstract class AbstractRepository implements RepositoryInterface
     public function insertOnDuplicateKeyUpdate(EntityInterface $entity): bool
     {
         $data = $this->hydrator->extract($entity);
-        $query = 'INSERT INTO ' . $this->getTableName() . ' (' . $this->getColumns($entity,$data) . ')
-                    VALUES (' . $this->getValues($entity,$data) . ') ON DUPLICATE KEY UPDATE 
-                    ' . $this->getUpdatedValues($entity,$data) .';';
+        $query = 'INSERT INTO ' . $this->getTableName() . ' (' . $this->getColumns($entity, $data) . ')
+                    VALUES (' . $this->getValues($entity, $data) . ') ON DUPLICATE KEY UPDATE 
+                    ' . $this->getUpdatedValues($entity, $data) . ';';
         $dbStmt = $this->pdo->prepare($query);
         foreach ($data as $fieldName => &$value) {
+            $f = $value;
+            if (is_array($f)) {
+                $result = implode(",", $f);
+                $dbStmt->bindValue(':' . $fieldName, $result);
+                continue;
+            }
             $dbStmt->bindParam(':' . $fieldName, $value);
         }
 
@@ -219,4 +226,26 @@ abstract class AbstractRepository implements RepositoryInterface
         $dbStmt->execute();
         return $dbStmt->rowCount() > 0;
     }
+
+    /**
+     * @param EntityInterface $entity
+     * @param EntityInterface $target
+     * @return bool
+     */
+//    public function setForeignKeyId(EntityInterface $entity, EntityInterface $target)
+//    {
+//        $entityId = $entity->getId();
+//
+//        $data = $this->hydrator->extract($target);
+//        $query = 'INSERT INTO ' . $this->getTableName() . ' (' . $this->getColumns($entity, $data) . ')
+//                    VALUES (' . $this->getValues($entity, $data) . ') ON DUPLICATE KEY UPDATE
+//                    ' . $this->getUpdatedValues($entity, $data) . ';';
+//        $dbStmt = $this->pdo->prepare($query);
+//        foreach ($data as $fieldName => &$value) {
+//            $dbStmt->bindParam(':' . $fieldName, $value);
+//        }
+//
+//        return $dbStmt->execute();
+//    }
+
 }

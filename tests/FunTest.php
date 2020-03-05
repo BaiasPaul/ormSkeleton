@@ -1,8 +1,10 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
+use ReallyOrm\Test\Entity\Quiz;
 use ReallyOrm\Test\Hydrator\Hydrator;
 use ReallyOrm\Test\Entity\User;
+use ReallyOrm\Test\Repository\QuizRepository;
 use ReallyOrm\Test\Repository\RepositoryManager;
 use ReallyOrm\Test\Repository\UserRepository;
 
@@ -26,10 +28,14 @@ class FunTest extends TestCase
     private $userRepo;
 
     /**
+     * @var QuizRepository
+     */
+    private $quizRepo;
+
+    /**
      * @var RepositoryManager
      */
     private $repoManager;
-
 
     protected function setUp(): void
     {
@@ -49,7 +55,9 @@ class FunTest extends TestCase
         $this->repoManager = new RepositoryManager();
         $this->hydrator = new Hydrator($this->repoManager);
         $this->userRepo = new UserRepository($this->pdo, User::class, $this->hydrator);
+        $this->quizRepo = new QuizRepository($this->pdo, Quiz::class, $this->hydrator);
         $this->repoManager->addRepository($this->userRepo);
+        $this->repoManager->addRepository($this->quizRepo);
     }
 
 //    public function testCreateUser(): void
@@ -65,13 +73,14 @@ class FunTest extends TestCase
 
 //    public function testUpdateUser(): void
 //    {
-//        $user = $this->userRepo->find(1);
+//        $user = $this->userRepo->find(6);
 //        $user->setEmail('paul@email.com');
 //        $this->repoManager->register($user);
 //        $result = $user->save();
 //
 //        $this->assertEquals(true, $result);
 //    }
+
 
     public function testFind(): void
     {
@@ -80,6 +89,9 @@ class FunTest extends TestCase
         $this->assertEquals(1, $user->getId());
     }
 
+    /**
+     * @throws ReflectionException
+     */
     public function testHydrate(): void
     {
         $entitie = new User('jhon', 'jhon@email.com');
@@ -92,6 +104,9 @@ class FunTest extends TestCase
         $this->assertEquals($entitie, $result);
     }
 
+    /**
+     * @throws ReflectionException
+     */
     public function testExtract(): void
     {
         $user = new User('jhon', 'jhon@email.com');
@@ -115,6 +130,9 @@ class FunTest extends TestCase
         $this->assertEquals(1, $user->getId());
     }
 
+    /**
+     * @return array
+     */
     public function findOneByProvider()
     {
         return [
@@ -143,6 +161,9 @@ class FunTest extends TestCase
         $this->assertEquals(1, $user[0]->getId());
     }
 
+    /**
+     * @return array
+     */
     public function findByProvider()
     {
         return [
@@ -170,23 +191,59 @@ class FunTest extends TestCase
     /**
      * @test
      */
-    public function testInsertOnDuplicateKeyUpdate(): void
+//    public function testInsertOnDuplicateKeyUpdate(): void
+//    {
+//        /** @var User $user */
+//
+//        $user = $this->userRepo->find(2);
+//        $user->setName("paul");
+//        $result = $this->userRepo->insertOnDuplicateKeyUpdate($user);
+//
+//        $this->assertEquals(1, $result);
+//    }
+
+
+    /**
+     * @test
+     */
+//    public function testDelete()
+//    {
+//        $user = $this->userRepo->find(9);
+//        $result = $this->userRepo->delete($user);
+//
+//
+//        $this->assertEquals(1, $result);
+//    }
+
+    /**
+     * @test
+     */
+//    public function testCreateQuiz(): void
+//    {
+//        $quiz = new Quiz();
+//        $quiz->setName('ciwawa');
+//        $quiz->setQuestions(['prima','a doua']);
+//        $quiz->setAnswers(['A','B']);
+//        $quiz->setGrade(9);
+//        $this->repoManager->register($quiz);
+//        $result = $quiz->save();
+//
+//        $this->assertEquals(true, $result);
+//    }
+
+    /**
+     * @test
+     */
+    public function testUpdateQuiz(): void
     {
-        /** @var User $user */
+        $quiz = $this->quizRepo->find(3);
+        $quiz->setGrade(8);
+        $this->repoManager->register($quiz);
+        $result = $quiz->save();
 
-        $user = $this->userRepo->find(2);
-        $user->setName("paul");
-        $result = $this->userRepo->insertOnDuplicateKeyUpdate($user);
-
-        $this->assertEquals(1, $result);
+        $this->assertEquals(true, $result);
     }
 
-    public function testDelete()
-    {
-        $user = $this->userRepo->find(9);
-        $result = $this->userRepo->delete($user);
 
-        $this->assertEquals(1, $result);
-    }
 
 }

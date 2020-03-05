@@ -4,53 +4,91 @@
 namespace ReallyOrm\Test\Entity;
 
 
-class Quiz
+use ReallyOrm\Entity\AbstractEntity;
+
+class Quiz extends AbstractEntity
 {
     /**
      * @var int
+     * @ID
      * @ORM id
      */
     private $id;
 
     /**
      * @var string
-     * @ORM id
+     * @ORM name
      */
     private $name;
 
     /**
      * @var array
-     * @ORM id
+     * @ORM questions
      */
     private $questions;
 
     /**
      * @var array
-     * @ORM id
+     * @ORM answers
      */
     private $answers;
 
     /**
      * @var int
-     * @ORM id
+     * @ORM grade
      */
     private $grade;
 
     /**
-     * @var int
-     * @ORM id
+     * Quiz constructor.
+     * @param string $name
+     * @param array $questions
+     * @param array $answers
+     * @param int $grade
      */
-    private $userId;
-
-    public function __construct($name,$questions,$answers,$grade,$userId)
+    public function __construct(string $name ='',array $questions=[],array $answers=[], int $grade=0)
     {
         $this->name = $name;
         $this->questions = $questions;
         $this->answers = $answers;
         $this->grade = $grade;
-        $this->userId = $userId;
     }
 
+    /**
+     * @param string $name
+     */
+    public function setName(string $name)
+    {
+        $this->name = $name;
+    }
+
+    /**
+     * @param array $questions
+     */
+    public function setQuestions(array $questions): void
+    {
+        $this->questions = $questions;
+    }
+
+    /**
+     * @param array $answers
+     */
+    public function setAnswers(array $answers): void
+    {
+        $this->answers = $answers;
+    }
+
+    /**
+     * @param int $grade
+     */
+    public function setGrade(int $grade): void
+    {
+        $this->grade = $grade;
+    }
+
+    /**
+     * @return int
+     */
     public function getId()
     {
         return $this->id;

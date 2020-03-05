@@ -29,22 +29,36 @@ class User extends AbstractEntity
      */
     private $email;
 
-    public function __construct($name = '', $email = '')
+    /**
+     * User constructor.
+     * @param string $name
+     * @param string $email
+     */
+    public function __construct(string $name = '', string $email = '')
     {
         $this->name = $name;
         $this->email = $email;
     }
 
-    public function setName($name)
+    /**
+     * @param string $name
+     */
+    public function setName(string $name): void
     {
         $this->name = $name;
     }
 
-    public function setEmail($email)
+    /**
+     * @param string $email
+     */
+    public function setEmail(string $email): void
     {
         $this->email = $email;
     }
 
+    /**
+     * @return int
+     */
     public function getId()
     {
         return $this->id;
