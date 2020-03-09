@@ -107,6 +107,23 @@ class FunTest extends TestCase
     /**
      * @throws ReflectionException
      */
+    public function testHydrateQuiz(): void
+    {
+        $entitie = new Quiz('quiz1', ['a', 'b'], ['z', 'c'], 5);
+        $data = [
+            'id' => null,
+            'name' => 'quiz1',
+            'questions' => ['a', 'b'],
+            'answers' => ['z', 'c'],
+            'grade' => 5
+        ];
+        $result = $this->hydrator->hydrate(Quiz::class, $data);
+        $this->assertEquals($entitie, $result);
+    }
+
+    /**
+     * @throws ReflectionException
+     */
     public function testExtract(): void
     {
         $user = new User('jhon', 'jhon@email.com');
@@ -244,6 +261,32 @@ class FunTest extends TestCase
         $this->assertEquals(true, $result);
     }
 
+    public function testSetForeignKey(): void
+    {
+        $quiz = $this->quizRepo->find(2);
+        $this->repoManager->register($quiz);
+        $user = $this->userRepo->find(6);
+
+        $this->repoManager->register($user);
+        $result = $this->quizRepo->setForeignKeyId($user, $quiz);
+
+        $this->assertEquals(true, $result);
+    }
+
+    public function testGetEntitiesFromTarget(): void
+    {
+        $quiz = $this->quizRepo->find(2);
+        $this->repoManager->register($quiz);
+        $quiz2 = $this->quizRepo->find(3);
+        $this->repoManager->register($quiz);
+        $entities = [$quiz,$quiz2];
+        $user = $this->userRepo->find(6);
+        $this->repoManager->register($user);
+
+        $result = $this->quizRepo->getEntitiesFromTarget($quiz, $user);
+
+        $this->assertEquals($entities, $result);
+    }
 
 
 }

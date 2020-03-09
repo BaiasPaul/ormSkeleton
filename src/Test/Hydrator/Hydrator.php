@@ -5,17 +5,29 @@ namespace ReallyOrm\Test\Hydrator;
 
 use ReallyOrm\Entity\EntityInterface;
 use ReallyOrm\Hydrator\HydratorInterface;
+use ReallyOrm\Test\Entity\User;
 use ReallyOrm\Test\Repository\RepositoryManager;
 use ReflectionClass;
 use ReflectionException;
 
+/**
+ * Class Hydrator
+ * @package ReallyOrm\Test\Hydrator
+ */
 class Hydrator implements HydratorInterface
 {
+    /**
+     * @var RepositoryManager
+     */
     private $repoManager;
 
+    /**
+     * Hydrator constructor.
+     * @param RepositoryManager $repositoryManager
+     */
     public function __construct(RepositoryManager $repositoryManager)
     {
-        $this->repoManager=$repositoryManager;
+        $this->repoManager = $repositoryManager;
     }
 
     /**
@@ -27,7 +39,7 @@ class Hydrator implements HydratorInterface
         $reflectionClass = new ReflectionClass($className);
         $entityClass = new $className;
         foreach ($reflectionClass->getProperties() as $property) {
-            if(!preg_match('/@ORM (\w+) ?/', $property->getDocComment(), $propertyName)){
+            if (!preg_match('/@ORM (\w+) ?/', $property->getDocComment(), $propertyName)) {
                 continue;
             }
             $property->setAccessible(true);
@@ -46,7 +58,7 @@ class Hydrator implements HydratorInterface
         $reflectionClass = new ReflectionClass(get_class($entity));
         $array = array();
         foreach ($reflectionClass->getProperties() as $property) {
-            if(!preg_match('/@ORM (\w+) ?/', $property->getDocComment(), $propertyName)){
+            if (!preg_match('/@ORM (\w+) ?/', $property->getDocComment(), $propertyName)) {
                 continue;
             }
             $property->setAccessible(true);
@@ -67,7 +79,7 @@ class Hydrator implements HydratorInterface
         foreach ($reflectionClass->getProperties() as $property) {
             if (preg_match('/@ID/', $property->getDocComment()) === 1) {
                 $property->setAccessible(true);
-                $property->setValue($id);
+                $property->setValue($entity, $id);
             }
         }
     }

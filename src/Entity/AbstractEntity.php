@@ -72,4 +72,12 @@ abstract class AbstractEntity implements EntityInterface
 
         $this->getRepository()->delete($this);
     }
+
+    /**
+     * @return string
+     */
+    public function getTableName(): string
+    {
+        return $this->getRepository()->getTableName();
+    }
 }

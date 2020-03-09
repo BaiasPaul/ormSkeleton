@@ -83,6 +83,7 @@ abstract class AbstractRepository implements RepositoryInterface
         $dbStmt->execute();
         $row = $dbStmt->fetch();
 
+
         return $this->hydrator->hydrate($this->entityName, $row);
     }
 
@@ -111,6 +112,9 @@ abstract class AbstractRepository implements RepositoryInterface
         }
         $dbStmt->execute();
         $row = $dbStmt->fetch();
+        if (!$row){
+            return null;
+        }
         return $this->hydrator->hydrate($this->entityName, $row);
     }
 
@@ -149,6 +153,7 @@ abstract class AbstractRepository implements RepositoryInterface
         $dbStmt->execute();
         $rows = $dbStmt->fetchAll();
         $result = [];
+
         foreach ($rows as $row) {
             $result[] = $this->hydrator->hydrate($this->entityName, $row);
         }
@@ -156,7 +161,7 @@ abstract class AbstractRepository implements RepositoryInterface
         return $result;
     }
 
-    private function getColumns(EntityInterface $entity, array $data)
+    private function getColumns(EntityInterface $entity)
     {
         $columns = '';
         $data = $this->hydrator->extract($entity);
@@ -167,7 +172,7 @@ abstract class AbstractRepository implements RepositoryInterface
         return substr($columns, '0', '-2');
     }
 
-    private function getValues(EntityInterface $entity, array $data)
+    private function getValues(EntityInterface $entity)
     {
         $columns = '';
         $data = $this->hydrator->extract($entity);
@@ -178,9 +183,10 @@ abstract class AbstractRepository implements RepositoryInterface
         return substr($columns, '0', '-2');
     }
 
-    private function getUpdatedValues(EntityInterface $entity, array $data)
+    private function getUpdatedValues(EntityInterface $entity)
     {
         $columns = '';
+        $data = $this->hydrator->extract($entity);
         foreach ($data as $fieldName => $value) {
             if ($fieldName === 'id') {
                 continue;
@@ -197,14 +203,14 @@ abstract class AbstractRepository implements RepositoryInterface
     public function insertOnDuplicateKeyUpdate(EntityInterface $entity): bool
     {
         $data = $this->hydrator->extract($entity);
-        $query = 'INSERT INTO ' . $this->getTableName() . ' (' . $this->getColumns($entity, $data) . ')
-                    VALUES (' . $this->getValues($entity, $data) . ') ON DUPLICATE KEY UPDATE 
-                    ' . $this->getUpdatedValues($entity, $data) . ';';
+        $query = 'INSERT INTO ' . $this->getTableName() . ' (' . $this->getColumns($entity) . ') VALUES (' .
+            $this->getValues($entity) . ') ON DUPLICATE KEY UPDATE ' .
+            $this->getUpdatedValues($entity) . ';';
         $dbStmt = $this->pdo->prepare($query);
         foreach ($data as $fieldName => &$value) {
-            $f = $value;
-            if (is_array($f)) {
-                $result = implode(",", $f);
+            $nonReferencedValue = $value;
+            if (is_array($nonReferencedValue)) {
+                $result = implode(",", $nonReferencedValue);
                 $dbStmt->bindValue(':' . $fieldName, $result);
                 continue;
             }
@@ -224,6 +230,7 @@ abstract class AbstractRepository implements RepositoryInterface
         $id = $entity->getId();
         $dbStmt->bindParam(':id', $id);
         $dbStmt->execute();
+
         return $dbStmt->rowCount() > 0;
     }
 
@@ -232,20 +239,51 @@ abstract class AbstractRepository implements RepositoryInterface
      * @param EntityInterface $target
      * @return bool
      */
-//    public function setForeignKeyId(EntityInterface $entity, EntityInterface $target)
-//    {
-//        $entityId = $entity->getId();
-//
-//        $data = $this->hydrator->extract($target);
-//        $query = 'INSERT INTO ' . $this->getTableName() . ' (' . $this->getColumns($entity, $data) . ')
-//                    VALUES (' . $this->getValues($entity, $data) . ') ON DUPLICATE KEY UPDATE
-//                    ' . $this->getUpdatedValues($entity, $data) . ';';
-//        $dbStmt = $this->pdo->prepare($query);
-//        foreach ($data as $fieldName => &$value) {
-//            $dbStmt->bindParam(':' . $fieldName, $value);
-//        }
-//
-//        return $dbStmt->execute();
-//    }
+    public function setForeignKeyId(EntityInterface $entity, EntityInterface $target): bool
+    {
+        $entityId = $entity->getId();
+        $targetId = $target->getId();
+
+        $query = 'UPDATE ' . $target->getTableName() . ' SET ' . $entity->getTableName() . '_id=:id WHERE id=:targetId';
+        $dbStmt = $this->pdo->prepare($query);
+        $dbStmt->bindParam(':id', $entityId);
+        $dbStmt->bindParam(':targetId', $targetId);
+
+        return $dbStmt->execute();
+    }
+
+    public function getFields(EntityInterface $entity)
+    {
+        $columns = '';
+        $data = $this->hydrator->extract($entity);
+        foreach ($data as $fieldName => $value) {
+            $columns .= $entity->getTableName() . '.' . $fieldName . ', ';
+        }
+
+        return substr($columns, '0', '-2');
+    }
+
+    public function getEntitiesFromTarget(EntityInterface $entity, EntityInterface $target): array
+    {
+        $entityId = $entity->getId();
+        $targetId = $target->getId();
+        $entityTable = $entity->getTableName();
+        $targetTable = $target->getTableName();
+        $fields = $this->getFields($entity);
+
+        $query = 'SELECT ' . $fields . ' FROM ' . $entityTable . ' INNER JOIN ' . $targetTable . ' ON ' . $targetTable . '.id = ' . $entityTable . '.' . $targetTable . '_id;';
+        $dbStmt = $this->pdo->prepare($query);
+//        $dbStmt->bindParam(':id', $entityId);
+//        $dbStmt->bindParam(':targetId', $targetId);
+        $dbStmt->execute();
+        $rows = $dbStmt->fetchAll();
+        $result = [];
+        foreach ($rows as $row) {
+            $result[] = $this->hydrator->hydrate($this->entityName, $row);
+        }
+
+        return $result;
+
+    }
 
 }
