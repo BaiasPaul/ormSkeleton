@@ -66,6 +66,9 @@ abstract class AbstractRepository implements RepositoryInterface
         return $this->entityName;
     }
 
+    /**
+     * @return string
+     */
     public function getTableName()
     {
         $clasName = explode("\\", $this->entityName);
@@ -83,10 +86,13 @@ abstract class AbstractRepository implements RepositoryInterface
         $dbStmt->execute();
         $row = $dbStmt->fetch();
 
-
         return $this->hydrator->hydrate($this->entityName, $row);
     }
 
+    /**
+     * @param array $filters
+     * @return false|string
+     */
     private function getFilters(array $filters)
     {
         $allFilters = '';
@@ -112,12 +118,17 @@ abstract class AbstractRepository implements RepositoryInterface
         }
         $dbStmt->execute();
         $row = $dbStmt->fetch();
-        if (!$row){
+        if (!$row) {
             return null;
         }
+
         return $this->hydrator->hydrate($this->entityName, $row);
     }
 
+    /**
+     * @param array $sorts
+     * @return false|string
+     */
     private function getSorts(array $sorts)
     {
         $allSorts = '';
@@ -131,6 +142,7 @@ abstract class AbstractRepository implements RepositoryInterface
             }
             $allSorts .= $fieldName . ' ASC, ';
         }
+
         return substr($allSorts, "0", "-2");
     }
 
@@ -161,6 +173,10 @@ abstract class AbstractRepository implements RepositoryInterface
         return $result;
     }
 
+    /**
+     * @param EntityInterface $entity
+     * @return false|string
+     */
     private function getColumns(EntityInterface $entity)
     {
         $columns = '';
@@ -172,6 +188,10 @@ abstract class AbstractRepository implements RepositoryInterface
         return substr($columns, '0', '-2');
     }
 
+    /**
+     * @param EntityInterface $entity
+     * @return false|string
+     */
     private function getValues(EntityInterface $entity)
     {
         $columns = '';
@@ -183,6 +203,10 @@ abstract class AbstractRepository implements RepositoryInterface
         return substr($columns, '0', '-2');
     }
 
+    /**
+     * @param EntityInterface $entity
+     * @return false|string
+     */
     private function getUpdatedValues(EntityInterface $entity)
     {
         $columns = '';
@@ -252,6 +276,10 @@ abstract class AbstractRepository implements RepositoryInterface
         return $dbStmt->execute();
     }
 
+    /**
+     * @param EntityInterface $entity
+     * @return false|string
+     */
     public function getFields(EntityInterface $entity)
     {
         $columns = '';
@@ -263,6 +291,11 @@ abstract class AbstractRepository implements RepositoryInterface
         return substr($columns, '0', '-2');
     }
 
+    /**
+     * @param EntityInterface $entity
+     * @param EntityInterface $target
+     * @return array
+     */
     public function getEntitiesFromTarget(EntityInterface $entity, EntityInterface $target): array
     {
         $entityId = $entity->getId();
@@ -284,6 +317,24 @@ abstract class AbstractRepository implements RepositoryInterface
 
         return $result;
 
+    }
+
+    /**
+     * @param array $filters
+     * @return mixed
+     */
+    public function getNumberOfEntities(array $filters)
+    {
+        $query = "SELECT count(id) FROM " .
+            $this->getTableName() .
+            $this->getFilters($filters);
+        $dbStmt = $this->pdo->prepare($query);
+        foreach ($filters as $fieldName => &$value) {
+            $dbStmt->bindParam(':' . $fieldName, $value);
+        }
+        $dbStmt->execute();
+
+        return $dbStmt->fetch();
     }
 
 }
