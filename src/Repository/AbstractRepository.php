@@ -325,7 +325,7 @@ abstract class AbstractRepository implements RepositoryInterface
      */
     public function getNumberOfEntities(array $filters)
     {
-        $query = "SELECT count(id) FROM " .
+        $query = "SELECT count(id) as entitiesNumber FROM " .
             $this->getTableName() .
             $this->getFilters($filters);
         $dbStmt = $this->pdo->prepare($query);
