@@ -170,6 +170,7 @@ abstract class AbstractRepository implements RepositoryInterface
             $result[] = $this->hydrator->hydrate($this->entityName, $row);
         }
 
+
         return $result;
     }
 
@@ -241,7 +242,9 @@ abstract class AbstractRepository implements RepositoryInterface
             $dbStmt->bindParam(':' . $fieldName, $value);
         }
         if ($dbStmt->execute()) {
-            $this->hydrator->hydrateId($entity, $this->pdo->lastInsertId());
+            if ($this->pdo->lastInsertId()!=0){
+                $this->hydrator->hydrateId($entity, $this->pdo->lastInsertId());
+            }
             return true;
         }
 
@@ -346,7 +349,7 @@ abstract class AbstractRepository implements RepositoryInterface
      */
     public function getNumberOfEntities(array $filters)
     {
-        $query = "SELECT count(id) as entitiesNumber FROM " .
+        $query = "SELECT count(*) as entitiesNumber FROM " .
             $this->getTableName() .
             $this->getFilters($filters);
         $dbStmt = $this->pdo->prepare($query);
