@@ -240,8 +240,12 @@ abstract class AbstractRepository implements RepositoryInterface
             }
             $dbStmt->bindParam(':' . $fieldName, $value);
         }
+        if ($dbStmt->execute()) {
+            $this->hydrator->hydrateId($entity, $this->pdo->lastInsertId());
+            return true;
+        }
 
-        return $dbStmt->execute();
+        return false;
     }
 
     /**
@@ -316,7 +320,6 @@ abstract class AbstractRepository implements RepositoryInterface
         }
 
         return $result;
-
     }
 
     /**
@@ -335,6 +338,20 @@ abstract class AbstractRepository implements RepositoryInterface
         $dbStmt->execute();
 
         return $dbStmt->fetch();
+    }
+
+    public function searchByField(string $field, string $text)
+    {
+        $query = "SELECT * FROM " . $this->getTableName() . " WHERE " . $field . " LIKE '%" . $text . "%'";
+        $dbStmt = $this->pdo->prepare($query);
+        $dbStmt->execute();
+        $rows = $dbStmt->fetchAll();
+        $result = [];
+        foreach ($rows as $row) {
+            $result[] = $this->hydrator->hydrate($this->entityName, $row);
+        }
+
+        return $result;
     }
 
 }
