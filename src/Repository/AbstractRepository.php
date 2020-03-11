@@ -248,6 +248,24 @@ abstract class AbstractRepository implements RepositoryInterface
         return false;
     }
 
+    public function setEntitiesToTarget( $target, array $entities)
+    {
+        if (empty($entities)) {
+            return false;
+        }
+        $targetTableName = $target->getTableName();
+        $entityTableName = $entities[0]->getTableName();
+        foreach ($entities as $entity) {
+            $query = 'INSERT INTO ' . $targetTableName . $entityTableName . ' (' . $targetTableName . '_id,' . $entityTableName .
+                '_id) VALUES (' . $target->getId() . ',' .  $entity->getId() . ') ON DUPLICATE KEY UPDATE ' . $targetTableName .
+                '_id=VALUES(' . $targetTableName . '_id),' . $entityTableName . '_id=VALUES(' . $entityTableName . '_id);';
+            $dbStmt = $this->pdo->prepare($query);
+
+            $dbStmt->execute();
+        }
+        return true;
+    }
+
     /**
      * @inheritDoc
      */
