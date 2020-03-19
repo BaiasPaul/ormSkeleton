@@ -242,7 +242,7 @@ abstract class AbstractRepository implements RepositoryInterface
             $dbStmt->bindParam(':' . $fieldName, $value);
         }
         if ($dbStmt->execute()) {
-            if ($this->pdo->lastInsertId()!=0){
+            if ($this->pdo->lastInsertId() != 0) {
                 $this->hydrator->hydrateId($entity, $this->pdo->lastInsertId());
             }
             return true;
@@ -251,7 +251,12 @@ abstract class AbstractRepository implements RepositoryInterface
         return false;
     }
 
-    public function setEntitiesToTarget( $target, array $entities)
+    /**
+     * @param $target
+     * @param array $entities
+     * @return bool
+     */
+    public function setEntitiesToTarget($target, array $entities)
     {
         if (empty($entities)) {
             return false;
@@ -260,7 +265,7 @@ abstract class AbstractRepository implements RepositoryInterface
         $entityTableName = $entities[0]->getTableName();
         foreach ($entities as $entity) {
             $query = 'INSERT INTO ' . $targetTableName . $entityTableName . ' (' . $targetTableName . '_id,' . $entityTableName .
-                '_id) VALUES (' . $target->getId() . ',' .  $entity->getId() . ') ON DUPLICATE KEY UPDATE ' . $targetTableName .
+                '_id) VALUES (' . $target->getId() . ',' . $entity->getId() . ') ON DUPLICATE KEY UPDATE ' . $targetTableName .
                 '_id=VALUES(' . $targetTableName . '_id),' . $entityTableName . '_id=VALUES(' . $entityTableName . '_id);';
             $dbStmt = $this->pdo->prepare($query);
 
@@ -323,16 +328,13 @@ abstract class AbstractRepository implements RepositoryInterface
      */
     public function getEntitiesFromTarget(EntityInterface $entity, EntityInterface $target): array
     {
-        $entityId = $entity->getId();
-        $targetId = $target->getId();
+
         $entityTable = $entity->getTableName();
         $targetTable = $target->getTableName();
         $fields = $this->getFields($entity);
 
         $query = 'SELECT ' . $fields . ' FROM ' . $entityTable . ' INNER JOIN ' . $targetTable . ' ON ' . $targetTable . '.id = ' . $entityTable . '.' . $targetTable . '_id;';
         $dbStmt = $this->pdo->prepare($query);
-//        $dbStmt->bindParam(':id', $entityId);
-//        $dbStmt->bindParam(':targetId', $targetId);
         $dbStmt->execute();
         $rows = $dbStmt->fetchAll();
         $result = [];
@@ -344,35 +346,56 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * @param array $filters
-     * @return mixed
+     * Returns entities that contain the $fieldValue of the $fieldName.
+     * The match is performed using the LIKE comparison operator.
+     * The result set is paginated.
+     *
+     * @param string $fieldName
+     * @param string $fieldValue
+     * @param int $from
+     * @param int $size
+     * @return array
      */
-    public function getNumberOfEntities(array $filters)
+    public function getEntitiesByField(string $fieldName = 'id', string $fieldValue ="", int $from = 0, int $size = 999999999999999)
     {
-        $query = "SELECT count(*) as entitiesNumber FROM " .
-            $this->getTableName() .
-            $this->getFilters($filters);
-        $dbStmt = $this->pdo->prepare($query);
-        foreach ($filters as $fieldName => &$value) {
-            $dbStmt->bindParam(':' . $fieldName, $value);
+        $query = 'SELECT count(*) as entitiesNumber FROM ' . $this->getTableName();
+        if ($fieldName) {
+            $query = 'SELECT * FROM ' . $this->getTableName() . ' WHERE ' . $fieldName . ' LIKE :field LIMIT :limit OFFSET :offset;';
         }
-        $dbStmt->execute();
-
-        return $dbStmt->fetch();
-    }
-
-    public function searchByField(string $field, string $text)
-    {
-        $query = "SELECT * FROM " . $this->getTableName() . " WHERE " . $field . " LIKE '%" . $text . "%'";
         $dbStmt = $this->pdo->prepare($query);
+        $dbStmt->bindParam(':limit', $size);
+        $dbStmt->bindParam(':offset', $from);
+        $dbStmt->bindValue(':field', "%$fieldValue%");
         $dbStmt->execute();
         $rows = $dbStmt->fetchAll();
         $result = [];
+
         foreach ($rows as $row) {
             $result[] = $this->hydrator->hydrate($this->entityName, $row);
         }
 
         return $result;
+    }
+
+    /**
+     * Returns number of entities that contain the $fieldValue of the $fieldName.
+     * The match is performed using the LIKE comparison operator.
+     *
+     * @param string $fieldName
+     * @param string $fieldValue
+     * @return mixed
+     */
+    public function getEntityNumberByField(string $fieldName = null, string $fieldValue = "")
+    {
+        $query = 'SELECT count(*) as entitiesNumber FROM ' . $this->getTableName();
+        if ($fieldName){
+            $query = 'SELECT count(*) as entitiesNumber FROM ' . $this->getTableName() . ' WHERE ' . $fieldName . ' LIKE :field';
+        }
+        $dbStmt = $this->pdo->prepare($query);
+        $dbStmt->bindValue(':field', "%$fieldValue%");
+        $dbStmt->execute();
+
+        return $dbStmt->fetch()['entitiesNumber'];
     }
 
 }
