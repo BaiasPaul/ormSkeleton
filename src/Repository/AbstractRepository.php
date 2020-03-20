@@ -3,6 +3,7 @@
 namespace ReallyOrm\Repository;
 
 use PDO;
+use ReallyOrm\Entity\AbstractEntity;
 use ReallyOrm\Entity\EntityInterface;
 use ReallyOrm\Hydrator\HydratorInterface;
 use ReallyOrm\Test\Entity\User;
@@ -242,7 +243,7 @@ abstract class AbstractRepository implements RepositoryInterface
             $dbStmt->bindParam(':' . $fieldName, $value);
         }
         if ($dbStmt->execute()) {
-            if ($this->pdo->lastInsertId() != 0) {
+            if ($this->pdo->lastInsertId() !== 0) {
                 $this->hydrator->hydrateId($entity, $this->pdo->lastInsertId());
             }
             return true;
@@ -256,7 +257,7 @@ abstract class AbstractRepository implements RepositoryInterface
      * @param array $entities
      * @return bool
      */
-    public function setEntitiesToTarget($target, array $entities)
+    public function setEntitiesToTarget(AbstractEntity $target, array $entities): bool
     {
         if (empty($entities)) {
             return false;
@@ -328,7 +329,6 @@ abstract class AbstractRepository implements RepositoryInterface
      */
     public function getEntitiesFromTarget(EntityInterface $entity, EntityInterface $target): array
     {
-
         $entityTable = $entity->getTableName();
         $targetTable = $target->getTableName();
         $fields = $this->getFields($entity);
@@ -358,23 +358,20 @@ abstract class AbstractRepository implements RepositoryInterface
      */
     public function getEntitiesByField(string $fieldName = 'id', string $fieldValue ="", int $from = 0, int $size = 999999999999999)
     {
-        $query = 'SELECT count(*) as entitiesNumber FROM ' . $this->getTableName();
-        if ($fieldName) {
-            $query = 'SELECT * FROM ' . $this->getTableName() . ' WHERE ' . $fieldName . ' LIKE :field LIMIT :limit OFFSET :offset;';
-        }
+        $query = 'SELECT * FROM ' . $this->getTableName() . ' WHERE ' . $fieldName . ' LIKE :field LIMIT :limit OFFSET :offset;';
         $dbStmt = $this->pdo->prepare($query);
         $dbStmt->bindParam(':limit', $size);
         $dbStmt->bindParam(':offset', $from);
         $dbStmt->bindValue(':field', "%$fieldValue%");
         $dbStmt->execute();
         $rows = $dbStmt->fetchAll();
-        $result = [];
+        $results = [];
 
         foreach ($rows as $row) {
-            $result[] = $this->hydrator->hydrate($this->entityName, $row);
+            $results[] = $this->hydrator->hydrate($this->entityName, $row);
         }
 
-        return $result;
+        return $results;
     }
 
     /**
@@ -383,19 +380,16 @@ abstract class AbstractRepository implements RepositoryInterface
      *
      * @param string $fieldName
      * @param string $fieldValue
-     * @return mixed
+     * @return int
      */
-    public function getEntityNumberByField(string $fieldName = null, string $fieldValue = "")
+    public function getNumberOfEntitiesByField(string $fieldName = null, string $fieldValue = ""): int
     {
-        $query = 'SELECT count(*) as entitiesNumber FROM ' . $this->getTableName();
-        if ($fieldName){
-            $query = 'SELECT count(*) as entitiesNumber FROM ' . $this->getTableName() . ' WHERE ' . $fieldName . ' LIKE :field';
-        }
+        $query = 'SELECT count(*) as entitiesNumber FROM ' . $this->getTableName() . ' WHERE ' . $fieldName . ' LIKE :field';
         $dbStmt = $this->pdo->prepare($query);
         $dbStmt->bindValue(':field', "%$fieldValue%");
         $dbStmt->execute();
 
-        return $dbStmt->fetch()['entitiesNumber'];
+        return (int)$dbStmt->fetch()['entitiesNumber'];
     }
 
 }
