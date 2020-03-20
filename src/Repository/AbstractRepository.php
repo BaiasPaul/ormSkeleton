@@ -345,24 +345,35 @@ abstract class AbstractRepository implements RepositoryInterface
         return $result;
     }
 
+    public function getSelectedFields(array $fields): string
+    {
+        if (empty($fields)) {
+            return "";
+        }
+        $result = " WHERE ";
+        foreach ($fields as $fieldName => $fieldValue) {
+            $result .= "$fieldName LIKE '%$fieldValue%' AND ";
+        }
+        return substr($result, '0', '-5');
+    }
+
     /**
      * Returns entities that contain the $fieldValue of the $fieldName.
      * The match is performed using the LIKE comparison operator.
      * The result set is paginated.
      *
-     * @param string $fieldName
-     * @param string $fieldValue
+     * @param array $fields
      * @param int $from
      * @param int $size
      * @return array
      */
-    public function getEntitiesByField(string $fieldName = 'id', string $fieldValue ="", int $from = 0, int $size = 999999999999999): array
+    public function getEntitiesByField(array $fields = [], int $from = 0, int $size = 999999999999999): array
     {
-        $query = 'SELECT * FROM ' . $this->getTableName() . ' WHERE ' . $fieldName . ' LIKE :field LIMIT :limit OFFSET :offset;';
+        $selectedFields = $this->getSelectedFields($fields);
+        $query = 'SELECT * FROM ' . $this->getTableName() . $selectedFields . ' LIMIT :limit OFFSET :offset;';
         $dbStmt = $this->pdo->prepare($query);
         $dbStmt->bindParam(':limit', $size);
         $dbStmt->bindParam(':offset', $from);
-        $dbStmt->bindValue(':field', "%$fieldValue%");
         $dbStmt->execute();
         $rows = $dbStmt->fetchAll();
         $results = [];
@@ -378,15 +389,14 @@ abstract class AbstractRepository implements RepositoryInterface
      * Returns number of entities that contain the $fieldValue of the $fieldName.
      * The match is performed using the LIKE comparison operator.
      *
-     * @param string $fieldName
-     * @param string $fieldValue
+     * @param array $fields
      * @return int
      */
-    public function getNumberOfEntitiesByField(string $fieldName = null, string $fieldValue = ""): int
+    public function getNumberOfEntitiesByField(array $fields = []): int
     {
-        $query = 'SELECT count(*) as entitiesNumber FROM ' . $this->getTableName() . ' WHERE ' . $fieldName . ' LIKE :field';
+        $selectedFields = $this->getSelectedFields($fields);
+        $query = 'SELECT count(*) as entitiesNumber FROM ' . $this->getTableName() . $selectedFields;
         $dbStmt = $this->pdo->prepare($query);
-        $dbStmt->bindValue(':field', "%$fieldValue%");
         $dbStmt->execute();
 
         return (int)$dbStmt->fetch()['entitiesNumber'];
