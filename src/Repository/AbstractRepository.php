@@ -356,7 +356,7 @@ abstract class AbstractRepository implements RepositoryInterface
      * @param int $size
      * @return array
      */
-    public function getEntitiesByField(string $fieldName = 'id', string $fieldValue ="", int $from = 0, int $size = 999999999999999)
+    public function getEntitiesByField(string $fieldName = 'id', string $fieldValue ="", int $from = 0, int $size = 999999999999999): array
     {
         $query = 'SELECT * FROM ' . $this->getTableName() . ' WHERE ' . $fieldName . ' LIKE :field LIMIT :limit OFFSET :offset;';
         $dbStmt = $this->pdo->prepare($query);
