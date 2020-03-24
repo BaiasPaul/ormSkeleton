@@ -45,6 +45,7 @@ class Hydrator implements HydratorInterface
             $property->setAccessible(true);
             $property->setValue($entityClass, $data[$propertyName[1]]);
         }
+        $this->repoManager->register($entityClass);
 
         return $entityClass;
     }
