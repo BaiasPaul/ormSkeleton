@@ -257,7 +257,7 @@ abstract class AbstractRepository implements RepositoryInterface
      * @param array $entities
      * @return bool
      */
-    public function setEntitiesToTarget(AbstractEntity $target, array $entities): bool
+    public function setEntitiesToTarget(EntityInterface $target, array $entities): bool
     {
         if (empty($entities)) {
             return false;
