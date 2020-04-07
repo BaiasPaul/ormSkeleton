@@ -5,6 +5,7 @@ namespace ReallyOrm\Repository;
 use PDO;
 use ReallyOrm\Entity\AbstractEntity;
 use ReallyOrm\Entity\EntityInterface;
+use ReallyOrm\Entity\Filter;
 use ReallyOrm\Hydrator\HydratorInterface;
 use ReallyOrm\Test\Entity\User;
 use ReflectionClass;
@@ -363,10 +364,10 @@ abstract class AbstractRepository implements RepositoryInterface
      * The result set is paginated.
      * The result set can be ordered by a specific field and asc/desc
      *
-     * @param EntityInterface $filtersForEntity
+     * @param Filter $filtersForEntity
      * @return array
      */
-    public function getEntitiesByField(EntityInterface $filtersForEntity): array
+    public function getEntitiesByField(Filter $filtersForEntity): array
     {
         $selectedFields = $this->getSelectedFields($filtersForEntity->getFilters());
         $query = 'SELECT * FROM ' . $this->getTableName() . $selectedFields . ' ORDER BY '
