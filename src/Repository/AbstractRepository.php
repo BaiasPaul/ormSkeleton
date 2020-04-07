@@ -361,19 +361,19 @@ abstract class AbstractRepository implements RepositoryInterface
      * Returns entities that contain the $fieldValue of the $fieldName.
      * The match is performed using the LIKE comparison operator.
      * The result set is paginated.
+     * The result set can be ordered by a specific field and asc/desc
      *
-     * @param array $fields
-     * @param int $from
-     * @param int $size
+     * @param EntityInterface $filtersForEntity
      * @return array
      */
-    public function getEntitiesByField(array $fields = [], int $from = 0, int $size = 999999999999999): array
+    public function getEntitiesByField(EntityInterface $filtersForEntity): array
     {
-        $selectedFields = $this->getSelectedFields($fields);
-        $query = 'SELECT * FROM ' . $this->getTableName() . $selectedFields . ' LIMIT :limit OFFSET :offset;';
+        $selectedFields = $this->getSelectedFields($filtersForEntity->getFilters());
+        $query = 'SELECT * FROM ' . $this->getTableName() . $selectedFields . ' ORDER BY '
+            .$filtersForEntity->getOrderBy() .' '.$filtersForEntity->getSortType().' LIMIT :limit OFFSET :offset;';
         $dbStmt = $this->pdo->prepare($query);
-        $dbStmt->bindParam(':limit', $size);
-        $dbStmt->bindParam(':offset', $from);
+        $dbStmt->bindParam(':limit', $filtersForEntity->getLimit());
+        $dbStmt->bindParam(':offset', $filtersForEntity->getOffset());
         $dbStmt->execute();
         $rows = $dbStmt->fetchAll();
         $results = [];
