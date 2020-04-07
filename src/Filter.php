@@ -1,10 +1,10 @@
 <?php
 
-namespace ReallyOrm\Entity;
+namespace ReallyOrm;
 
 /**
  * Class Filter
- * @package ReallyOrm\Entity
+ * @package ReallyOrm
  */
 class Filter
 {

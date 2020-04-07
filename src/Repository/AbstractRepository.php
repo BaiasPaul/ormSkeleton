@@ -5,7 +5,7 @@ namespace ReallyOrm\Repository;
 use PDO;
 use ReallyOrm\Entity\AbstractEntity;
 use ReallyOrm\Entity\EntityInterface;
-use ReallyOrm\Entity\Filter;
+use ReallyOrm\Filter;
 use ReallyOrm\Hydrator\HydratorInterface;
 use ReallyOrm\Test\Entity\User;
 use ReflectionClass;
@@ -367,7 +367,7 @@ abstract class AbstractRepository implements RepositoryInterface
      * @param Filter $filtersForEntity
      * @return array
      */
-    public function getEntitiesByField(Filter $filtersForEntity): array
+    public function getFilteredEntities(Filter $filtersForEntity): array
     {
         $selectedFields = $this->getSelectedFields($filtersForEntity->getFilters());
         $query = 'SELECT * FROM ' . $this->getTableName() . $selectedFields . ' ORDER BY '
